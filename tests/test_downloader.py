@@ -46,6 +46,11 @@ def test_classify_rate_limit():
     assert code == "rate_limit"
 
 
+def test_classify_cookies_locked_permission_denied():
+    code, msg = classify_error("", "Permission denied: cookies.db", 1)
+    assert code == "cookies_locked"
+
+
 def test_classify_private():
     code, msg = classify_error("", "Requested content is not available", 1)
     assert code == "private"

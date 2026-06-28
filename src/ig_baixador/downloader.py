@@ -21,8 +21,9 @@ def classify_error(stdout, stderr, returncode):
     blob = (stdout + "\n" + stderr).lower()
     if "401" in blob or "login required" in blob or "challenge" in blob:
         return ("login", "Faça login no Instagram pelo Chrome e tente de novo.")
-    if "dpapi" in blob or "could not copy" in blob or "unable to read" in blob \
-            or "failed to decrypt" in blob or "permission denied" in blob and "cookies" in blob:
+    if ("dpapi" in blob or "could not copy" in blob or "unable to read" in blob
+            or "failed to decrypt" in blob
+            or ("permission denied" in blob and "cookies" in blob)):
         return ("cookies_locked",
                 "Não consegui ler os cookies do Chrome. Feche o Chrome e tente de novo, "
                 "ou use o cookies.txt.")
