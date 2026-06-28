@@ -6,7 +6,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, ttk
 
-from .config import default_config, load_config, save_config
+from .config import load_config, save_config
 from .downloader import download
 
 _CONFIG_PATH = Path.home() / ".ig-baixador" / "config.json"
@@ -67,9 +67,14 @@ class App:
         threading.Thread(target=self._run, args=(url,), daemon=True).start()
 
     def _run(self, url):
-        res = download(url, self.cfg, on_log=self._log)
-        self._set_status(res.message, ok=res.ok)
-        self.root.after(0, lambda: self.btn.configure(state="normal"))
+        try:
+            res = download(url, self.cfg, on_log=self._log)
+            self._set_status(res.message, ok=res.ok)
+        except Exception as e:
+            self._log(f"Erro inesperado: {e}")
+            self._set_status("Erro inesperado. Veja o log.", ok=False)
+        finally:
+            self.root.after(0, lambda: self.btn.configure(state="normal"))
 
 
 def run():
