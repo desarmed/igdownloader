@@ -1,5 +1,7 @@
+from ig_baixador.config import Config
 from ig_baixador.downloader import (
     build_gallery_dl_cmd, build_ytdlp_cmd, classify_error,
+    download, DownloadResult,
 )
 
 
@@ -59,3 +61,48 @@ def test_classify_private():
 def test_classify_ok():
     code, msg = classify_error("1 file downloaded", "", 0)
     assert code == "ok"
+
+
+def _cfg():
+    return Config(dest_dir="D:/out", cookie_mode="chrome", cookies_txt_path="")
+
+
+def test_download_rejects_non_instagram():
+    res = download("https://youtube.com/x", _cfg(), runner=lambda cmd: (0, "", ""))
+    assert res.ok is False
+    assert res.code == "not_instagram"
+
+
+def test_download_success_first_try():
+    calls = []
+    def runner(cmd):
+        calls.append(cmd)
+        return (0, "1 file downloaded", "")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert res.ok is True
+    assert res.code == "ok"
+    assert len(calls) == 1  # não precisou de fallback
+
+
+def test_download_falls_back_to_ytdlp_for_reel():
+    calls = []
+    def runner(cmd):
+        calls.append(cmd)
+        # 1ª chamada (gallery-dl) falha, 2ª (yt-dlp) dá certo
+        if len(calls) == 1:
+            return (1, "", "some error")
+        return (0, "[download] 100%", "")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert res.ok is True
+    assert len(calls) == 2
+    assert "yt-dlp" in calls[1][0]
+
+
+def test_download_login_error_no_fallback_loops():
+    calls = []
+    def runner(cmd):
+        calls.append(cmd)
+        return (1, "", "401 Unauthorized")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert res.ok is False
+    assert res.code == "login"
