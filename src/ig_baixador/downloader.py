@@ -1,11 +1,12 @@
 """Construção de comandos, classificação de erro e orquestração do download."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
 
-from .binaries import resolve_binary
+from .binaries import platform_bin_dir, resolve_binary
 from .cookies import cookie_args
 from .urls import is_instagram_url, normalize_url, detect_url_type
 
@@ -51,11 +52,16 @@ class DownloadResult:
 
 
 def _default_runner(cmd):
+    env = os.environ.copy()
+    try:
+        env["PATH"] = str(platform_bin_dir()) + os.pathsep + env.get("PATH", "")
+    except Exception:
+        pass
     kwargs = {}
     if sys.platform == "win32":
         kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
     proc = subprocess.run(cmd, capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", **kwargs)
+                          encoding="utf-8", errors="replace", env=env, **kwargs)
     return (proc.returncode, proc.stdout, proc.stderr)
 
 

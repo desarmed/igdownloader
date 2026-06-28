@@ -26,6 +26,15 @@ def binaries_base_dir() -> Path:
     return Path(__file__).resolve().parents[2] / "bin"
 
 
+def platform_bin_dir() -> Path:
+    """Retorna o diretório de binários da plataforma atual."""
+    platform = sys.platform
+    sub = _PLATFORM_DIR.get(platform)
+    if sub is None:
+        raise ValueError(f"plataforma não suportada: {platform!r}")
+    return binaries_base_dir() / sub
+
+
 def resolve_binary(tool: str) -> Path:
     platform = sys.platform
     sub = _PLATFORM_DIR.get(platform)
