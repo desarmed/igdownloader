@@ -4,7 +4,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from .config import load_config, save_config
 from .downloader import download
@@ -32,6 +32,13 @@ class App:
             side="left", fill="x", expand=True, padx=6)
         ttk.Button(row, text="Escolher...", command=self._pick_dir).pack(side="left")
 
+        cookie_row = ttk.Frame(root); cookie_row.pack(fill="x", padx=12, pady=(0, 6))
+        ttk.Label(cookie_row, text="Cookies do Instagram:").pack(side="left")
+        self.cookie_status = ttk.Label(cookie_row, text="")
+        self.cookie_status.pack(side="left", padx=6)
+        ttk.Button(cookie_row, text="Selecionar cookies.txt...", command=self._pick_cookies).pack(side="left", padx=(6, 2))
+        ttk.Button(cookie_row, text="Usar Chrome", command=self._use_chrome).pack(side="left")
+
         self.btn = ttk.Button(root, text="Baixar", command=self._on_download)
         self.btn.pack(padx=12, pady=4)
 
@@ -40,6 +47,38 @@ class App:
 
         self.log = tk.Text(root, height=14, wrap="word")
         self.log.pack(fill="both", expand=True, padx=12, pady=8)
+
+        self._refresh_cookie_status()
+
+    def _refresh_cookie_status(self):
+        if (
+            self.cfg.cookie_mode == "cookies_txt"
+            and self.cfg.cookies_txt_path
+            and Path(self.cfg.cookies_txt_path).exists()
+        ):
+            self.cookie_status.configure(
+                text=f"arquivo: {Path(self.cfg.cookies_txt_path).name}"
+            )
+        else:
+            self.cookie_status.configure(text="Chrome (automático)")
+
+    def _pick_cookies(self):
+        path = filedialog.askopenfilename(
+            title="Selecione o cookies.txt",
+            filetypes=[("cookies.txt", "*.txt"), ("Todos", "*.*")],
+        )
+        if path:
+            self.cfg.cookie_mode = "cookies_txt"
+            self.cfg.cookies_txt_path = path
+            save_config(self.cfg, _CONFIG_PATH)
+            self._refresh_cookie_status()
+            messagebox.showinfo("Cookies", "Cookies definidos. Agora é só baixar.")
+
+    def _use_chrome(self):
+        self.cfg.cookie_mode = "auto"
+        self.cfg.cookies_txt_path = ""
+        save_config(self.cfg, _CONFIG_PATH)
+        self._refresh_cookie_status()
 
     def _pick_dir(self):
         d = filedialog.askdirectory(initialdir=self.dest_var.get() or ".")
@@ -66,9 +105,21 @@ class App:
         self.log.delete("1.0", "end")
         threading.Thread(target=self._run, args=(url,), daemon=True).start()
 
+    def _prompt_cookies(self):
+        answer = messagebox.askyesno(
+            "Cookies necessários",
+            "Não consegui usar os cookies do Chrome. Exporte um cookies.txt "
+            "(extensão 'Get cookies.txt LOCALLY', com a aba do instagram.com aberta) "
+            "e selecione o arquivo. Selecionar agora?",
+        )
+        if answer:
+            self._pick_cookies()
+
     def _run(self, url):
         try:
             res = download(url, self.cfg, on_log=self._log)
+            if not res.ok and res.code in ("cookies_locked", "login") and self.cfg.cookie_mode != "cookies_txt":
+                self.root.after(0, self._prompt_cookies)
             self._set_status(res.message, ok=res.ok)
         except Exception as e:
             self._log(f"Erro inesperado: {e}")
