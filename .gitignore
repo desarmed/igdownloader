@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+build/dist/
+dist/
+*.egg-info/
+.pytest_cache/
+# binários são grandes; baixados no setup/CI, não versionados
+bin/win/
+bin/mac/
+# downloads locais e cookies do usuário
+downloads/
+config.json
+cookies.txt

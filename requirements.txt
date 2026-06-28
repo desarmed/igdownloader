@@ -1,0 +1,2 @@
+# Runtime usa apenas a stdlib (Tkinter) + binários externos em bin/.
+# gallery-dl e yt-dlp são distribuídos como binários, não como deps Python.
