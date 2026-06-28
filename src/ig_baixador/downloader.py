@@ -50,7 +50,8 @@ class DownloadResult:
 
 
 def _default_runner(cmd):
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    proc = subprocess.run(cmd, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace")
     return (proc.returncode, proc.stdout, proc.stderr)
 
 
@@ -72,22 +73,32 @@ def download(url, cfg, on_log=None, runner=None):
     ck = cookie_args(cfg)
 
     # 1) gallery-dl (principal)
-    gd = str(resolve_binary("gallery-dl"))
     emit("Baixando com gallery-dl...")
-    rc, out, err = runner(build_gallery_dl_cmd(gd, url, cfg.dest_dir, ck))
-    emit(out)
-    emit(err)
+    try:
+        gd = str(resolve_binary("gallery-dl"))
+        rc, out, err = runner(build_gallery_dl_cmd(gd, url, cfg.dest_dir, ck))
+    except Exception:
+        return DownloadResult(False, "unknown",
+                              "Não encontrei o programa de download embutido. Reinstale o app.",
+                              "\n".join(log_lines))
+    if out: emit(out)
+    if err: emit(err)
     code, message = classify_error(out, err, rc)
     if code == "ok":
         return DownloadResult(True, code, message, "\n".join(log_lines))
 
     # 2) fallback yt-dlp só pra vídeo (reel/post)
     if detect_url_type(url) in ("reel", "post"):
-        yt = str(resolve_binary("yt-dlp"))
         emit("Tentando de novo com yt-dlp...")
-        rc2, out2, err2 = runner(build_ytdlp_cmd(yt, url, cfg.dest_dir, ck))
-        emit(out2)
-        emit(err2)
+        try:
+            yt = str(resolve_binary("yt-dlp"))
+            rc2, out2, err2 = runner(build_ytdlp_cmd(yt, url, cfg.dest_dir, ck))
+        except Exception:
+            return DownloadResult(False, "unknown",
+                                  "Não encontrei o programa de download embutido. Reinstale o app.",
+                                  "\n".join(log_lines))
+        if out2: emit(out2)
+        if err2: emit(err2)
         code2, message2 = classify_error(out2, err2, rc2)
         if code2 == "ok":
             return DownloadResult(True, code2, message2, "\n".join(log_lines))

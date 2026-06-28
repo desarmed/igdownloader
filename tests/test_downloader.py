@@ -106,3 +106,11 @@ def test_download_login_error_no_fallback_loops():
     res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
     assert res.ok is False
     assert res.code == "login"
+
+
+def test_download_runner_exception_returns_result():
+    def runner(cmd):
+        raise FileNotFoundError("binary not found")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert isinstance(res, DownloadResult)
+    assert res.ok is False
