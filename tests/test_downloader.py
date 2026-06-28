@@ -114,3 +114,19 @@ def test_download_runner_exception_returns_result():
     res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
     assert isinstance(res, DownloadResult)
     assert res.ok is False
+
+
+def test_download_missing_binary_message():
+    def runner(cmd):
+        raise FileNotFoundError("gallery-dl not found")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert res.ok is False
+    assert "Reinstale" in res.message
+
+
+def test_download_other_error_message():
+    def runner(cmd):
+        raise RuntimeError("boom")
+    res = download("https://www.instagram.com/reel/Cabc/", _cfg(), runner=runner)
+    assert res.ok is False
+    assert "Falhou ao executar" in res.message

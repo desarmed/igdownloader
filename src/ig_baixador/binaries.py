@@ -1,6 +1,8 @@
 """Localização dos binários embutidos (gallery-dl, yt-dlp) por plataforma."""
 from __future__ import annotations
 
+import os
+import stat
 import sys
 from pathlib import Path
 
@@ -29,4 +31,9 @@ def resolve_binary(tool: str) -> Path:
     sub = _PLATFORM_DIR.get(platform)
     if sub is None:
         raise ValueError(f"plataforma não suportada: {platform!r}")
-    return binaries_base_dir() / sub / binary_filename(tool, platform)
+    path = binaries_base_dir() / sub / binary_filename(tool, platform)
+    if getattr(sys, "frozen", False) and sys.platform != "win32" and path.exists():
+        mode = path.stat().st_mode
+        if not (mode & stat.S_IXUSR):
+            os.chmod(path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    return path

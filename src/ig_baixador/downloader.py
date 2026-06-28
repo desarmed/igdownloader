@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from dataclasses import dataclass
 
 from .binaries import resolve_binary
@@ -50,8 +51,11 @@ class DownloadResult:
 
 
 def _default_runner(cmd):
+    kwargs = {}
+    if sys.platform == "win32":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
     proc = subprocess.run(cmd, capture_output=True, text=True,
-                          encoding="utf-8", errors="replace")
+                          encoding="utf-8", errors="replace", **kwargs)
     return (proc.returncode, proc.stdout, proc.stderr)
 
 
@@ -77,9 +81,14 @@ def download(url, cfg, on_log=None, runner=None):
     try:
         gd = str(resolve_binary("gallery-dl"))
         rc, out, err = runner(build_gallery_dl_cmd(gd, url, cfg.dest_dir, ck))
-    except Exception:
+    except FileNotFoundError:
         return DownloadResult(False, "unknown",
                               "Não encontrei o programa de download embutido. Reinstale o app.",
+                              "\n".join(log_lines))
+    except Exception as e:
+        emit(f"Erro ao executar download: {e}")
+        return DownloadResult(False, "unknown",
+                              "Falhou ao executar o download. Veja o log.",
                               "\n".join(log_lines))
     if out: emit(out)
     if err: emit(err)
@@ -93,9 +102,14 @@ def download(url, cfg, on_log=None, runner=None):
         try:
             yt = str(resolve_binary("yt-dlp"))
             rc2, out2, err2 = runner(build_ytdlp_cmd(yt, url, cfg.dest_dir, ck))
-        except Exception:
+        except FileNotFoundError:
             return DownloadResult(False, "unknown",
                                   "Não encontrei o programa de download embutido. Reinstale o app.",
+                                  "\n".join(log_lines))
+        except Exception as e:
+            emit(f"Erro ao executar download: {e}")
+            return DownloadResult(False, "unknown",
+                                  "Falhou ao executar o download. Veja o log.",
                                   "\n".join(log_lines))
         if out2: emit(out2)
         if err2: emit(err2)

@@ -23,4 +23,6 @@ python -m venv .venv
 # baixar binários (ver docs/superpowers/plans) e rodar:
 .venv\Scripts\python -m pytest -q
 .venv\Scripts\python -m ig_baixador
+# Build do .exe (rodar da raiz do repo D:\ig-downloader):
+.venv\Scripts\pyinstaller build\ig-baixador.spec --noconfirm --distpath dist --workpath build\work
 ```
