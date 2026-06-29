@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import threading
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox
 from urllib.parse import urlparse
 
 import customtkinter as ctk
+
+_EXT_URL = (
+    "https://chromewebstore.google.com/detail/get-cookiestxt-locally/"
+    "cclelndahbckbenkjhflpdbgdldlbecc"
+)
 
 from .config import load_config, save_config
 from .downloader import download
@@ -116,6 +122,16 @@ class App:
             font=ctk.CTkFont(size=22, weight="bold"),
             text_color=TEXT,
         ).grid(row=0, column=0, sticky="w")
+
+        self._help_btn = ctk.CTkButton(
+            header, text="❔ Como usar",
+            font=ctk.CTkFont(size=11),
+            fg_color=CARD, hover_color=SURFACE_ALT,
+            text_color=TEXT, corner_radius=20,
+            width=110, height=28,
+            command=self._show_help,
+        )
+        self._help_btn.grid(row=0, column=1, sticky="e", padx=(0, 8))
 
         self._pill = ctk.CTkButton(
             header, text="cookies: Chrome",
@@ -259,6 +275,70 @@ class App:
         d = filedialog.askdirectory(initialdir=self._dest_var.get() or ".")
         if d:
             self._dest_var.set(d)
+
+    # ── Guia / ajuda ──────────────────────────────────────────────────────────
+
+    def _show_help(self):
+        win = ctk.CTkToplevel(self.root)
+        win.title("Como usar o IG Baixador")
+        win.geometry("580x560")
+        win.configure(fg_color=BG)
+        win.transient(self.root)
+        win.after(250, win.lift)
+
+        body = ctk.CTkScrollableFrame(win, fg_color="transparent")
+        body.pack(fill="both", expand=True, padx=20, pady=16)
+
+        def title(txt):
+            ctk.CTkLabel(body, text=txt, font=ctk.CTkFont(size=15, weight="bold"),
+                         text_color=TEXT, anchor="w", justify="left",
+                         wraplength=500).pack(fill="x", pady=(10, 2))
+
+        def step(txt, color=None):
+            ctk.CTkLabel(body, text=txt, font=ctk.CTkFont(size=13),
+                         text_color=color or MUTED, anchor="w", justify="left",
+                         wraplength=500).pack(fill="x", pady=1)
+
+        ctk.CTkLabel(body, text="Como usar", font=ctk.CTkFont(size=20, weight="bold"),
+                     text_color=TEXT, anchor="w").pack(fill="x")
+
+        title("1. Cookies do Instagram (só na 1ª vez)")
+        step("O Instagram só entrega o conteúdo pra quem está logado, e o Chrome "
+             "não deixa ler os cookies automaticamente. Por isso, uma vez só, você "
+             "exporta um arquivinho de cookies:")
+        step("a) Instale a extensão \"Get cookies.txt LOCALLY\" no Chrome "
+             "(é gratuita e roda 100% no seu PC).")
+        step("b) Abra o instagram.com já logado e, COM essa aba na frente, clique "
+             "no ícone da extensão → Export.")
+        step("c) Aqui no app, clique em \"Selecionar cookies.txt\" e escolha o "
+             "arquivo que baixou (normalmente na pasta Downloads).")
+        step("Pronto — fica salvo. Só repita quando a sessão expirar (de tempos "
+             "em tempos).")
+
+        btns = ctk.CTkFrame(body, fg_color="transparent")
+        btns.pack(fill="x", pady=(8, 4))
+        ctk.CTkButton(btns, text="Abrir a extensão no Chrome", fg_color=ACCENT,
+                      hover_color=ACCENT_HOV, text_color="#FFFFFF", corner_radius=8,
+                      command=lambda: webbrowser.open(_EXT_URL)).pack(side="left")
+        ctk.CTkButton(btns, text="Selecionar cookies.txt", fg_color=CARD,
+                      hover_color=SURFACE_ALT, text_color=TEXT, corner_radius=8,
+                      command=self._pick_cookies).pack(side="left", padx=8)
+
+        title("2. Baixar")
+        step("Cole um ou vários links — um por linha — e clique \"Baixar tudo\". "
+             "Cada link vira uma linha na Fila com o progresso.")
+        step("Funciona com: reels e vídeos, fotos e carrosséis, stories, "
+             "destaques e até o perfil inteiro (cole o link do perfil).")
+        step("Os vídeos saem como um MP4 único com som. Stories e destaques só "
+             "funcionam com os cookies configurados (passo 1).")
+
+        title("Deu erro de cookies?")
+        step("Quase sempre é a sessão expirada: re-exporte o cookies.txt (passo 1) "
+             "e selecione de novo. O app também avisa e oferece selecionar na hora.")
+
+        ctk.CTkButton(body, text="Entendi", fg_color=ACCENT, hover_color=ACCENT_HOV,
+                      text_color="#FFFFFF", corner_radius=8,
+                      command=win.destroy).pack(pady=(14, 4))
 
     # ── Download orchestration ────────────────────────────────────────────────
 

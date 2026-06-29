@@ -13,3 +13,11 @@ bin/mac/
 downloads/
 config.json
 cookies.txt
+*cookies*.txt
+# notas internas de desenvolvimento (não publicar)
+.superpowers/
+# saídas de teste e build transitório
+_e2e/
+_e2e_ffmpeg/
+_e2e_bonus/
+build/work/
