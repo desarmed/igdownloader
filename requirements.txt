@@ -1,2 +1,3 @@
-# Runtime usa apenas a stdlib (Tkinter) + binários externos em bin/.
+# Runtime: customtkinter for the GUI
+customtkinter>=5.2,<6
 # gallery-dl e yt-dlp são distribuídos como binários, não como deps Python.

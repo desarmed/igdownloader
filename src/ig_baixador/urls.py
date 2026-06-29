@@ -40,3 +40,15 @@ def detect_url_type(url: str) -> str:
             return "highlight"
         return "story"
     return "profile"
+
+
+def parse_links(text: str) -> list[str]:
+    """Quebra um bloco de texto em links limpos: uma URL por linha, sem vazias, sem duplicatas (ordem preservada)."""
+    seen = set()
+    out = []
+    for line in text.splitlines():
+        s = line.strip()
+        if s and s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out
