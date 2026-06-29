@@ -1,56 +1,58 @@
+**English** · [Português](README.pt-BR.md) · [Español](README.es.md) · [中文](README.zh.md)
+
+---
+
 # IG Baixador
 
-Baixador pessoal de conteúdo do Instagram para desktop (Windows e macOS).
-Roda **no seu PC, do seu IP e da sua sessão logada** — por isso funciona quando os
-sites públicos de download (SnapInsta, iGram, etc.) estão fora do ar.
+Personal Instagram content downloader for desktop (Windows and macOS).
+It runs **on your own PC, from your own IP, and using your own logged-in session** — which is why it works even when the public download sites (SnapInsta, iGram, etc.) are down.
 
-Cole um ou vários links e baixe de uma vez. Os vídeos saem como um **MP4 único com
-som** (ffmpeg embutido — você não instala nada).
+Paste one or several links and download them all at once. Videos come out as a **single MP4 with sound** (ffmpeg is bundled — you don't install anything).
 
-## O que baixa
-- **Reels e vídeos** (foco principal) — MP4 com áudio
-- Fotos e carrosséis do feed
-- Stories e destaques (com cookies configurados)
-- Perfil inteiro (cole o link do perfil)
+## What it downloads
+- **Reels and videos** (the main focus) — MP4 with audio
+- Feed photos and carousels
+- Stories and highlights (with cookies set up)
+- An entire profile (just paste the profile link)
 
-## Como usar
-1. Abra o **IG Baixador** (Windows: `IG-Baixador.exe`; Mac: abra o `.dmg`, arraste o
-   app e, **na 1ª vez, botão direito → Abrir**).
-2. **Cookies (1ª vez):** o Instagram só entrega conteúdo logado, e o Chrome não deixa
-   ler os cookies automaticamente. Então:
-   - Instale a extensão **"Get cookies.txt LOCALLY"** no Chrome (gratuita, roda local).
-   - Abra o `instagram.com` logado e, com essa aba na frente, clique no ícone da
-     extensão → **Export**.
-   - No app, clique **"Selecionar cookies.txt"** e escolha o arquivo baixado.
-   - O botão **"❔ Como usar"** dentro do app tem esse passo a passo.
-3. Cole um ou vários links (um por linha) e clique **"Baixar tudo"**. Cada link vira
-   uma linha na fila com o progresso.
+## How to use
+1. Open **IG Baixador** (Windows: `IG-Baixador.exe`; Mac: open the `.dmg`, drag the
+   app in, and **the first time, right-click → Open**).
+2. **Cookies (first time):** Instagram only serves content when you're logged in, and
+   Chrome won't let the app read its cookies automatically. So:
+   - Install the **"Get cookies.txt LOCALLY"** extension in Chrome (free, runs locally).
+   - Open `instagram.com` while logged in and, with that tab in front, click the
+     extension's icon → **Export**.
+   - In the app, click **"Select cookies.txt"** and choose the file you downloaded.
+   - The **"❔ How to use"** button inside the app walks you through these same steps.
+3. Paste one or more links (one per line) and click **"Download all"**. Each link
+   becomes a row in the queue showing its progress.
 
-## Desenvolver
+## Development
 
-Requer Python 3.11+.
+Requires Python 3.11+.
 
 ```bash
 python -m venv .venv
 .venv\Scripts\pip install -r requirements-dev.txt   # pytest, pyinstaller
 .venv\Scripts\pip install -r requirements.txt       # customtkinter
 
-# Binários externos embutidos (não versionados) — baixe para bin/win/:
+# Bundled external binaries (not versioned) — download them into bin/win/:
 curl -L -o bin/win/gallery-dl.exe https://github.com/mikf/gallery-dl/releases/download/v1.31.10/gallery-dl.exe
 curl -L -o bin/win/yt-dlp.exe     https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
-# + ffmpeg.exe e ffprobe.exe (ex.: build estático do gyan.dev) em bin/win/
+# + ffmpeg.exe and ffprobe.exe (e.g. a static build from gyan.dev) in bin/win/
 
-.venv\Scripts\python -m pytest -q          # testes
-.venv\Scripts\python -m ig_baixador        # roda a janela
+.venv\Scripts\python -m pytest -q          # tests
+.venv\Scripts\python -m ig_baixador        # launches the window
 
-# Build do .exe (rodar da raiz do repo):
+# Build the .exe (run from the repo root):
 .venv\Scripts\pyinstaller build\ig-baixador.spec --noconfirm --distpath dist --workpath build\work
 ```
 
-O app do **macOS** (`.dmg`) é gerado pelo GitHub Actions (workflow `build-mac.yml`),
-num runner macOS — não é possível compilar o app de Mac a partir do Windows.
+The **macOS** app (`.dmg`) is built by GitHub Actions (the `build-mac.yml` workflow)
+on a macOS runner — you can't compile the Mac app from Windows.
 
-## Como funciona
-Casca em **customtkinter** (interface) por cima de **gallery-dl** (motor principal) com
-**yt-dlp** de reserva e **ffmpeg** para juntar áudio+vídeo. A sessão vem só de cookies
-(do navegador ou de um `cookies.txt`) — o app **nunca pede usuário/senha**.
+## How it works
+A **customtkinter** shell (the interface) sits on top of **gallery-dl** (the main engine), with
+**yt-dlp** as a fallback and **ffmpeg** to merge audio and video. The session comes purely from cookies
+(either from the browser or from a `cookies.txt` file) — the app **never asks for a username or password**.
